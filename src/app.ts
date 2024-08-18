@@ -1,22 +1,19 @@
-import express from 'express';
+
+import { createBot, createFlow, MemoryDB, createProvider, addKeyword } from "@bot-whatsapp/bot"
+import { BaileysProvider, handleCtx } from "@bot-whatsapp/provider-baileys"
 import cors from 'cors';
-import { createBot, createFlow, MemoryDB, createProvider, addKeyword } from "@bot-whatsapp/bot";
-import { BaileysProvider, handleCtx } from "@bot-whatsapp/provider-baileys";
+
+
 
 const flowBienvenida = addKeyword('hola').addAnswer('¡Cómo estás!, bienvenido a TAXI CORP');
+
 
 const main = async () => {
     const provider = createProvider(BaileysProvider);
     provider.initHttpServer(3001);
 
-    const app = express();
-
-    // Habilitar CORS para todas las rutas
-    app.use(cors({
-        origin: 'https://taxicorp-bo.web.app', // Cambia esto al dominio de tu aplicación web
-        methods: 'POST',
-        credentials: true,
-    }));
+    const corsMiddleware = cors();
+    provider.http?.server.use(corsMiddleware); // Aplica CORS a todas las rutas
 
     provider.http?.server.post('/enviar-whatsapp', (req, res) => {
         handleCtx(async (bot, req, res) => {
@@ -27,6 +24,8 @@ const main = async () => {
         })(req, res);
     });
 
+  
+
     await createBot({
         flow: createFlow([flowBienvenida]),
         database: new MemoryDB(),
@@ -35,3 +34,4 @@ const main = async () => {
 }
 
 main();
+
