@@ -1,30 +1,28 @@
-
-import { createBot, createFlow, MemoryDB, createProvider, addKeyword } from "@bot-whatsapp/bot"
-import { BaileysProvider, handleCtx } from "@bot-whatsapp/provider-baileys"
+// Después (ES6)
+import express from 'express';
 import cors from 'cors';
+import { createBot, createFlow, MemoryDB, createProvider, addKeyword } from "@bot-whatsapp/bot";
+import { BaileysProvider, handleCtx } from "@bot-whatsapp/provider-baileys";
 
+const app = express();
 const flowBienvenida = addKeyword('hola').addAnswer('¡Cómo estás!, bienvenido a TAXI CORP');
 
-const main = async () => {
-    const provider = createProvider(BaileysProvider);
-    provider.initHttpServer(3001);
+app.use(cors()); // Habilitar CORS para todas las rutas
 
-    const corsMiddleware = cors();
+app.post('/enviar-whatsapp', (req, res) => {
+    handleCtx(async (bot, req, res) => {
+        const phone = req.body.phone;
+        const message = req.body.message;
+        await bot.sendMessage(phone, message, {});
+        res.json({ message: 'Mensaje enviado desde servidor DonWeb' });
+    })(req, res);
+});
 
-    provider.http?.server.post('/enviar-whatsapp', (req, res) => {
-        corsMiddleware(req, res, () => handleCtx(async (bot, req, res) => {
-            const phone = req.body.phone;
-            const message = req.body.message;
-            await bot.sendMessage(phone, message, {});
-            res.end('Mensaje enviado desde servidor DonWeb');
-        })(req, res));
-    });
+const provider = createProvider(BaileysProvider);
+provider.initHttpServer(3001);
 
-    await createBot({
-        flow: createFlow([flowBienvenida]),
-        database: new MemoryDB(),
-        provider
-    });
-}
-
-main();
+createBot({
+    flow: createFlow([flowBienvenida]),
+    database: new MemoryDB(),
+    provider
+});
