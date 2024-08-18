@@ -12,7 +12,11 @@ const main = async () => {
     const app = express();
 
     // Habilitar CORS para todas las rutas
-    app.use(cors());
+    app.use(cors({
+        origin: 'https://taxicorp-bo.web.app', // Cambia esto al dominio de tu aplicación web
+        methods: 'POST',
+        credentials: true,
+    }));
 
     provider.http?.server.post('/enviar-whatsapp', (req, res) => {
         handleCtx(async (bot, req, res) => {
